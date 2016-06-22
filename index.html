@@ -5,55 +5,34 @@
   <!-- Latest compiled and minified CSS -->
   <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7" crossorigin="anonymous">
 
+  <!--Font awesome-->
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.6.3/css/font-awesome.min.css">
+
   <!-- Optional theme -->
   <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap-theme.min.css" integrity="sha384-fLW2N01lMqjakBkx3l/M9EahuwpSfeNvV63J5ezn3uZzapT0u7EYsXMjQV+0En5r" crossorigin="anonymous">
 
   <style>
     hr { width: 165px;}
-    h1 { margin-left: 10px; }
+    h1 { margin-left: 20px; }
+    #addTime:focus {
+      outline:none;
+    }
   </style>
 </head>
 
 <body>
   <div class="page-header">
-    <h1>Time Out Calculator <small>Calculate what time you can go home <button id="instr" type="button" data-target="#myModal" data-toggle="modal" class= "btn btn-sm btn-warning" onclick="showInstructions()">Instructions</button></small></h1>
-  </div>
-  <!-- Modal -->
-  <div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
-    <div class="modal-dialog" role="document">
-      <div class="modal-content">
-        <div class="modal-header">
-          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-            <span aria-hidden="true">&times;</span>
-          </button>
-          <h4 class="modal-title" id="myModalLabel">How to Use the Time Out Calculator</h4>
-        </div>
-        <div class="modal-body">
-          <ol>
-            <li>Enter your Times In and Times Out throughout the day accordingly.</li>
-            <li>Click "Add Time In" to add the latest time you have come in.</li>
-            <li>Calculate what time you get to go home!</li>
-          </ol>
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-primary" data-dismiss="modal">Close</button>
-        </div>
-      </div>
-    </div>
+    <h1>Time Out Calculator <small>Calculate what time you can go home</small></h1>
   </div>
   <div class="container">
-    <p><em>How many hours to work today?</em> <input id="hoursToWork" type="number" value="8" min="0" max="16" onchange="updateHoursToWork()" /></p>
+    <p><em>How many hours will you work today?</em> <input id="hoursToWork" type="number" value="8" min="0" max="16" onchange="updateHoursToWork()" /></p>
     <hr align="left">
+    <p><button id="addTime" type="button" class= "btn btn-info" onclick="addTime()">Add Time Out</button></p>
     <div id="app">
-      <p>Time In: <input type="time" id="in-0"></p>
-      <!-- <p>Time Out: &nbsp;<input type="time" id="out-0"></p> -->
+      <p>Time In: <input type="time" id="In-1"></p>
     </div>
-    <button id="addOut" type="button" class= "btn btn-info" onclick="addTime('Out')">Add Time Out</button>
-    <button id="addIn" type="button" class= "btn btn-info" onclick="addTime('In')">Add Time In</button>
-
-    <br><br>
-    <button id="calc" type="button" class= "btn btn-primary" onclick="calculate()">Calculate</button>
-    <p id="result"></p>
+    <!-- <button onclick="calculate()">Calculate</button> -->
+    <h3 id="result"></h3>
   </div>
 
   <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
@@ -61,56 +40,72 @@
   <!-- Latest compiled and minified JavaScript -->
   <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js" integrity="sha384-0mSbJDEHialfmuBBQP6A4Qrprq5OVfW37PRR3j5ELqxss1yVqOtnepnHVP9aJ7xS" crossorigin="anonymous"></script>
   <script>
-    var countIn = 1;
-    var countOut = 0;
-    var hoursToWork = document.getElementById("hoursToWork").value;
-    var canCalculate = true;
-    var canAddTimeIn = true;
-    var lastAdded = "In";
+    var checkTime;
+    var count = 1;
+    var hoursToWork = 8;
+    var when = "Out";
+    var mode = "lastIn";
+    var timesClicked = 0;
+    $(document).ready(function(){
+      checkTime = setInterval(calculate, 50);
+    });
 
     function updateHoursToWork(){
       hoursToWork = document.getElementById("hoursToWork").value;
     }
 
-    function addTime(when){
+    function addTime() {
+      if(timesClicked >= 4) {
+        document.getElementById("result").innerHTML = "Cannot add more time.";
+        document.getElementById("addTime").disabled = true;
+        return;
+      }
+      timesClicked++;
       document.getElementById("result").innerHTML = "";
       var timeP = document.createElement("p");
-      var id;
-      if(lastAdded == when) {
-        document.getElementById("result").innerHTML = "Can't add two Time Ins or Time Outs in a row.";
-        return;
-      }
-      if(when == "In"){
-        id = "in-" + countIn++;
-        canCalculate = true;
-      } else {
-        id = "out-" + countOut++;
-        canCalculate = false;
-      }
-      lastAdded = when;
+      var id = when + "-" + count;
+      if(when == "Out") {count++;}
       timeP.innerHTML = "<hr align='left'>Time " + when + ": <input type='time' id='"+id+"'>";
       document.getElementById("app").appendChild(timeP);
+      var btn = document.getElementById("addTime");
+      if(when == "Out"){
+        when = "In";
+        btn.className = "btn btn-warning";
+      } else if (when == "In") {
+        when = "Out";
+        btn.className = "btn btn-info";
+      }
+      btn.innerHTML = "Add Time " + when;
     }
+
+    function getEnteredTime(str) {
+      var h = str.substring(0, str.indexOf(":"));
+      var m = str.substring(str.indexOf(":")+1, str.length);
+      return [h,m];
+    }
+
     function calculate() {
-      if (!canCalculate) {
-        document.getElementById("result").innerHTML = "Cannot calculate unless you Add Time In.";
+      //they haven't put in first input
+      if(document.getElementById("In-1").value == "") {
         return;
       }
-      var length = Math.floor(document.getElementById("app").getElementsByTagName("p").length / 2);
       var HRS = 0;
       var MINS = 0;
-      var lastOutTime;
-      for(var i = 0; i < length; i++) {
-        var inTime = document.getElementById("in-" + i).value; var outTime = document.getElementById("out-" + i).value;
+      var resultStr;
+
+      //last time was time "in"
+      (when == "Out") ? mode = "lastIn" : mode = "lastOut";
+
+      for(var i = 1; i < count; i++){
+        //they haven't finished input yet
+        if(document.getElementById("In-" + i).value == "" || document.getElementById("Out-" + i).value == "") {
+          return;
+        }
+        var inTime = document.getElementById("In-" + i).value; var outTime = document.getElementById("Out-" + i).value;
         var inHM = getEnteredTime(inTime); var outHM = getEnteredTime(outTime);
         var inDate = new Date(); var outDate = new Date();
         inDate.setHours(inHM[0]); outDate.setHours(outHM[0]);
         inDate.setMinutes(inHM[1]); outDate.setMinutes(outHM[1]);
-
-        //last out time
-        if(i == length - 1) {
-          lastOutTime = outHM;
-        }
 
         var diffMs = outDate - inDate;
         var diffHrs = Math.round((diffMs % 86400000) / 3600000); // hours
@@ -118,71 +113,55 @@
 
         HRS += diffHrs;
         MINS += diffMins;
-
       }
+      //make sure last input has been entered if the last was an "In"
+      if(mode == "lastIn" && document.getElementById("In-" + count).value == "") {
+        return;
+      }
+
+      //convert mins to hours if necessary
       while (MINS >= 60){
         HRS += 1;
         MINS -= 60;
       }
 
-      //no time was logged
-      if(HRS == 0 && MINS == 0 && countIn > 1) {
-        document.getElementById("result").innerHTML = resultStr;
-        return;
-      }
-
-      //negative time calculated
-      if(HRS < 0 || MINS < 0) {
-        document.getElementById("result").innerHTML = "Negative time was calculated. Was your entered Out Time before your entered In Time?";
-        return;
-      }
-
-      var hrsLeft = hoursToWork - 1 - HRS;
+      var hrsLeft = hoursToWork - HRS - 1;
       var minsLeft = 60 - MINS;
 
-      while (minsLeft >= 60){
-        hrsLeft += 1;
-        minsLeft -= 60;
-      }
-
-      var resultStr = "<p>" + hrsLeft + " hours and " + minsLeft + " minutes left.</p>";
-
-      var lastInTime = document.getElementById("in-" + parseInt(countIn-1)).value;
-      var lastInHM = getEnteredTime(lastInTime);
-
-      if (countIn > 1) {
-        if(lastOutTime[0] > lastInHM[0] || (lastOutTime[0] == lastInHM[0] && lastOutTime[1] > lastInHM[1])){
-          document.getElementById("result").innerHTML = "Your last In time is before your last Out time. Please update your times and try again.";
-          return;
+      //if the last input is Out Time, show them how many hours they have left
+      if(mode == "lastOut") {
+        while (minsLeft >= 60){
+          hrsLeft += 1;
+          minsLeft -= 60;
         }
-      }
-      var endHr = parseInt(lastInHM[0]) + hrsLeft;
-      var endMin = parseInt(lastInHM[1]) + minsLeft;
 
-      while (endMin >= 60){
-        endHr += 1;
-        endMin -= 60;
+        resultStr = "<p><strong>" + hrsLeft + " hours, " + minsLeft + " minutes left!</strong> Don't forget to clock back in <i class='fa fa-clock-o' aria-hidden='true'></i>.</p>";
       }
+      //if the last input is In Time, show them what time they can leave
+      else if (mode == "lastIn") {
+        var lastInTime = document.getElementById("In-" + count).value;
+        var lastInHM = getEnteredTime(lastInTime);
+        var endHr = parseInt(lastInHM[0]) + hrsLeft;
+        var endMin = parseInt(lastInHM[1]) + minsLeft;
 
-      var meridian = "AM";
-      debugger;
-      if (endHr > 12){
-        endHr -= 12;
-        meridian = "PM;"
+        while (endMin >= 60){
+          endHr += 1;
+          endMin -= 60;
+        }
+
+        var meridian = "AM";
+        if (endHr > 12){
+          endHr -= 12;
+          meridian = "PM";
+        }
+        if (endMin < 10){
+          endMin = "0" + endMin;
+        }
+        resultStr = "<p>To work " + hoursToWork + " hours, stay strong until <strong>" + endHr + ":" + endMin + meridian + "</strong>! <i class='fa fa-thumbs-up' aria-hidden='true'></i></p>";
+
       }
-      if (endMin < 10){
-        endMin = "0" + endMin;
-      }
-
-      resultStr += "<p>To work " + hoursToWork + " hours, stay until <strong>" + endHr + ":" + endMin + meridian + "</strong></p>";
-
       document.getElementById("result").innerHTML = resultStr;
 
-    }
-    function getEnteredTime(str) {
-      var h = str.substring(0, str.indexOf(":"));
-      var m = str.substring(str.indexOf(":")+1, str.length);
-      return [h,m];
     }
   </script>
 </body>
