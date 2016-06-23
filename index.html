@@ -31,7 +31,6 @@
     <div id="app">
       <p>Time In: <input type="time" id="In-1"></p>
     </div>
-    <!-- <button onclick="calculate()">Calculate</button> -->
     <h3 id="result"></h3>
   </div>
 
@@ -130,6 +129,7 @@
 
       //if the last input is Out Time, show them how many hours they have left
       if(mode == "lastOut") {
+        if(minsLeft <= 30) { hrsLeft += 1; }
         while (minsLeft >= 60){
           hrsLeft += 1;
           minsLeft -= 60;
@@ -144,6 +144,7 @@
         var endHr = parseInt(lastInHM[0]) + hrsLeft;
         var endMin = parseInt(lastInHM[1]) + minsLeft;
 
+        if(endMin <= 30) { endHr += 1; }
         while (endMin >= 60){
           endHr += 1;
           endMin -= 60;
