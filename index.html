@@ -78,91 +78,71 @@
     }
 
     function getEnteredTime(str) {
-      var h = str.substring(0, str.indexOf(":"));
-      var m = str.substring(str.indexOf(":")+1, str.length);
-      return [h,m];
+      var h = parseInt(str.substring(0, str.indexOf(":")));
+      var m = parseInt(str.substring(str.indexOf(":")+1, str.length));
+      m /= 60;
+      return h+m;
     }
 
     function calculate() {
-      //they haven't put in first input
-      if(document.getElementById("In-1").value == "") {
+      if(count == 1 && document.getElementById("In-1").value == "") {
         return;
       }
-      var HRS = 0;
-      var MINS = 0;
+      var hoursWorked = 0;
+      var hoursLeft = 0;
+      var minsLeft = 0;
       var resultStr;
-
-      //last time was time "in"
       (when == "Out") ? mode = "lastIn" : mode = "lastOut";
-
-      for(var i = 1; i < count; i++){
+      for (var i = 1; i < count; i++) {
         //they haven't finished input yet
         if(document.getElementById("In-" + i).value == "" || document.getElementById("Out-" + i).value == "") {
           return;
         }
-        var inTime = document.getElementById("In-" + i).value; var outTime = document.getElementById("Out-" + i).value;
-        var inHM = getEnteredTime(inTime); var outHM = getEnteredTime(outTime);
-        var inDate = new Date(); var outDate = new Date();
-        inDate.setHours(inHM[0]); outDate.setHours(outHM[0]);
-        inDate.setMinutes(inHM[1]); outDate.setMinutes(outHM[1]);
+        var inTime = document.getElementById("In-" + i).value;
+        var outTime = document.getElementById("Out-" + i).value;
+        var inHour = getEnteredTime(inTime);
+        var outHour = getEnteredTime(outTime);
 
-        var diffMs = outDate - inDate;
-        var diffHrs = Math.round((diffMs % 86400000) / 3600000); // hours
-        var diffMins = Math.round(((diffMs % 86400000) % 3600000) / 60000); // minutes
+        hoursWorked += outHour - inHour;
+        //to account for noon/midnight
+        if(outHour < inHour) {
+          hoursWorked += 1;
+        }
 
-        HRS += diffHrs;
-        MINS += diffMins;
       }
       //make sure last input has been entered if the last was an "In"
       if(mode == "lastIn" && document.getElementById("In-" + count).value == "") {
         return;
       }
+      hoursLeft = hoursToWork - hoursWorked;
 
-      //convert mins to hours if necessary
-      while (MINS >= 60){
-        HRS += 1;
-        MINS -= 60;
+      //last input was an "Out" time
+      if(mode == "lastOut"){
+        minsLeft = Math.round((hoursLeft - Math.floor(hoursLeft))*60);
+        hoursLeft = Math.floor(hoursLeft);
+        resultStr = "<p><strong>" + hoursLeft + " hours, " + minsLeft + " minutes left!</strong> Don't forget to clock back in <i class='fa fa-clock-o' aria-hidden='true'></i>.</p>";
       }
-
-      var hrsLeft = hoursToWork - HRS - 1;
-      var minsLeft = 60 - MINS;
-
-      //if the last input is Out Time, show them how many hours they have left
-      if(mode == "lastOut") {
-        if(minsLeft <= 30) { hrsLeft += 1; }
-        while (minsLeft >= 60){
-          hrsLeft += 1;
-          minsLeft -= 60;
-        }
-
-        resultStr = "<p><strong>" + hrsLeft + " hours, " + minsLeft + " minutes left!</strong> Don't forget to clock back in <i class='fa fa-clock-o' aria-hidden='true'></i>.</p>";
-      }
-      //if the last input is In Time, show them what time they can leave
+      //last input was an "In" time
       else if (mode == "lastIn") {
         var lastInTime = document.getElementById("In-" + count).value;
-        var lastInHM = getEnteredTime(lastInTime);
-        var endHr = parseInt(lastInHM[0]) + hrsLeft;
-        var endMin = parseInt(lastInHM[1]) + minsLeft;
+        var lastInHour = getEnteredTime(lastInTime);
 
-        if(endMin <= 30) { endHr += 1; }
-        while (endMin >= 60){
-          endHr += 1;
-          endMin -= 60;
-        }
+        var endHour = lastInHour + hoursLeft;
+        var endMin = Math.round((endHour - Math.floor(endHour))*60);
+        endHour = Math.floor(endHour);
 
         var meridian = "AM";
-        if (endHr > 12){
-          endHr -= 12;
+        if (endHour > 12){
+          endHour -= 12;
           meridian = "PM";
         }
         if (endMin < 10){
           endMin = "0" + endMin;
         }
-        resultStr = "<p>To work " + hoursToWork + " hours, stay strong until <strong>" + endHr + ":" + endMin + meridian + "</strong>! <i class='fa fa-thumbs-up' aria-hidden='true'></i></p>";
 
+        resultStr = "<p>To work " + hoursToWork + " hours, stay strong until <strong>" + endHour + ":" + endMin + meridian + "</strong>! <i class='fa fa-thumbs-up' aria-hidden='true'></i></p>";
       }
       document.getElementById("result").innerHTML = resultStr;
-
     }
   </script>
 </body>
