@@ -5,5 +5,5 @@ Uses vanilla Javascript and Bootstrap.
 To try it out, go to http://tenaciousj.github.io/TimeOutCalculator/
 
 
-Currently working on React.js version!
-
+ReactJS version here
+https://github.com/tenaciousj/TimeOutCalculator-React
